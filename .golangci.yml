@@ -1,0 +1,82 @@
+version: "2"
+linters:
+  default: none
+  enable:
+  - lll
+  - asasalint
+  - asciicheck
+  - bidichk
+  - bodyclose
+  - decorder
+  - dupl
+  - durationcheck
+  - errcheck
+  - errname
+  - errorlint
+  - exhaustive
+  - forbidigo
+  - funlen
+  - ginkgolinter
+  - gocheckcompilerdirectives
+  - gochecknoinits
+  - gocognit
+  - goconst
+  - gocritic
+  - gocyclo
+  - goheader
+  - gomodguard
+  - gosec
+  - govet
+  - ineffassign
+  - interfacebloat
+  - loggercheck
+  - makezero
+  - musttag
+  - nakedret
+  - nestif
+  - nilerr
+  - nilnil
+  - nolintlint
+  - prealloc
+  - predeclared
+  - promlinter
+  - reassign
+  - rowserrcheck
+  - sqlclosecheck
+  - staticcheck
+  - testableexamples
+  - tparallel
+  - unconvert
+  - unparam
+  - unused
+  - usestdlibvars
+  - wastedassign
+  - whitespace
+  exclusions:
+    generated: lax
+    presets:
+    - comments
+    - common-false-positives
+    - legacy
+    - std-error-handling
+    paths:
+    - third_party$
+    - builtin$
+    - examples$
+    rules:
+    - path: "_test\\.go"
+      linters:
+      - funlen
+      - errcheck
+      - gocognit
+issues:
+  max-same-issues: 50
+formatters:
+  enable:
+  - goimports
+  exclusions:
+    generated: lax
+    paths:
+    - third_party$
+    - builtin$
+    - examples$
