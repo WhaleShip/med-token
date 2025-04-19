@@ -7,6 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/whaleship/med-token/internal/config"
 	"github.com/whaleship/med-token/internal/database"
+	"github.com/whaleship/med-token/internal/handlers"
+	"github.com/whaleship/med-token/internal/repository"
+	"github.com/whaleship/med-token/internal/service"
 )
 
 func main() {
@@ -14,7 +17,13 @@ func main() {
 
 	app := fiber.New()
 	app.Use(logger.New())
+	rConn := database.GetInitRedis(cfg)
 
-	_ = database.GetInitRedis(cfg)
+	authRepo := repository.NewRefreshRepo(rConn)
+	authSvc := service.NewAuthService(cfg.JWTSecret, authRepo)
+	handlers := handlers.NewAuthHandler(authSvc)
+
+	app.Get("/token", handlers.GetTokens)
+	app.Post("/refresh", handlers.Refresh)
 	log.Fatal(app.Listen(":8080"))
 }
