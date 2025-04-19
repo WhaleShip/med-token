@@ -1,0 +1,29 @@
+services:
+  auth-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.App
+    image: auth-service:latest
+    container_name: auth-app
+    command: ./app
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:6-alpine
+    container_name: auth-redis
+    restart: always
+    command: ["redis-server"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
+    driver: local
