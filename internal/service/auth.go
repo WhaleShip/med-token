@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -25,12 +26,13 @@ type RefreshRepo interface {
 }
 
 type authService struct {
-	secret   []byte
-	refreshR RefreshRepo
+	secret       []byte
+	refreshR     RefreshRepo
+	emailService EmailService
 }
 
-func NewAuthService(secret []byte, repo RefreshRepo) *authService {
-	return &authService{secret, repo}
+func NewAuthService(secret []byte, repo RefreshRepo, es EmailService) *authService {
+	return &authService{secret, repo, es}
 }
 
 func (s *authService) CreateTokens(ctx context.Context, userID, ip string) (*dto.TokenResponse, error) {
@@ -80,14 +82,25 @@ func (s *authService) Refresh(ctx context.Context, req dto.RefreshRequest, ip st
 	}
 	jti, raw := parts[0], parts[1]
 
-	hash, _, userID, err := s.refreshR.Get(ctx, jti)
+	hash, oldIP, userID, err := s.refreshR.Get(ctx, jti)
 	if err != nil {
 		return nil, err
 	}
 	if err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(raw)); err != nil {
 		return nil, err
 	}
-
+	if ip != oldIP {
+		go func() {
+			err := s.emailService.Send(
+				[]string{"andreipogirei@yandex.ru"},
+				"Warning: IP address changed",
+				fmt.Sprintf("Your session IP changed from %s to %s", oldIP, ip),
+			)
+			if err != nil {
+				log.Println(err)
+			}
+		}()
+	}
 	if err = s.refreshR.Delete(ctx, jti); err != nil {
 		return nil, err
 	}

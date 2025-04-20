@@ -20,7 +20,13 @@ func main() {
 	rConn := database.GetInitRedis(cfg)
 
 	authRepo := repository.NewRefreshRepo(rConn)
-	authSvc := service.NewAuthService(cfg.JWTSecret, authRepo)
+	emailSvc := service.NewSMTPEmailService(
+		cfg.SMTPHost,
+		cfg.SMTPPort,
+		cfg.SMTPUsername,
+		cfg.SMTPPassword,
+	)
+	authSvc := service.NewAuthService(cfg.JWTSecret, authRepo, emailSvc)
 	handlers := handlers.NewAuthHandler(authSvc)
 
 	app.Get("/token", handlers.GetTokens)
