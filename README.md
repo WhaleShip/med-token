@@ -1,5 +1,8 @@
 # Refresh Токены
 
+[![linters](https://github.com/WhaleShip/med-token/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/WhaleShip/med-token/actions/workflows/golangci-lint.yml)
+[![tests](https://github.com/WhaleShip/med-token/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/WhaleShip/med-token/actions/workflows/unit-tests.yaml)
+
 ## Запуск
 
 ### 1. Создать .env
