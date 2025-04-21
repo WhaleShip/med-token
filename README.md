@@ -17,8 +17,9 @@ docker compose up
 
 
 приложение будет доступно на http://localhost:8080
+GET /token?user_id=<UUID> -> создать пару токенов на uuid
 
-
+POST /refresh (тело {"refresh_token":"refresh token"} -> обновить токены
 
 ### контакты
 [![Telegram Icon](https://raw.githubusercontent.com/CLorant/readme-social-icons/main/large/light/telegram.svg)](https://t.me/PanHater)
