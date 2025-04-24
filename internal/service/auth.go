@@ -36,38 +36,43 @@ func NewAuthService(secret []byte, repo RefreshRepo, es EmailService) *authServi
 }
 
 func (s *authService) CreateTokens(ctx context.Context, userID, ip string) (*dto.TokenResponse, error) {
-	rjti := uuid.NewString()
-	raw := uuid.NewString()
-	combined := fmt.Sprintf("%s:%s", rjti, raw)
-	encoded := base64.StdEncoding.EncodeToString([]byte(combined))
+	jti := uuid.NewString()
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(raw), bcrypt.DefaultCost)
+	rawSecret := uuid.NewString()
+	combined := fmt.Sprintf("%s:%s", jti, rawSecret)
+	refreshEncoded := base64.StdEncoding.EncodeToString([]byte(combined))
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(rawSecret), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("bcrypt.GenerateFromPassword: %w", err)
 	}
 
-	if err := s.refreshR.Save(ctx, rjti, string(hash), ip, userID, 7*24*time.Hour); err != nil {
-		return nil, err
+	if err := s.refreshR.Save(ctx, jti, string(hashed), ip, userID, 7*24*time.Hour); err != nil {
+		return nil, fmt.Errorf("refreshR.Save: %w", err)
 	}
 
+	now := time.Now()
 	claims := &entity.Claims{
 		UID:        userID,
 		IP:         ip,
-		RefreshJTI: rjti,
+		RefreshJTI: jti,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
-			ID:        uuid.NewString(),
+			ID:        jti,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)),
+			NotBefore: jwt.NewNumericDate(now),
 		},
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	access, err := token.SignedString(s.secret)
+	accessSigned, err := token.SignedString(s.secret)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SignedString: %w", err)
 	}
 
 	return &dto.TokenResponse{
-		AccessToken:  access,
-		RefreshToken: encoded,
+		AccessToken:  accessSigned,
+		RefreshToken: refreshEncoded,
 	}, nil
 }
 
